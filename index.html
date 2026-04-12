@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Roboto:wght@300;400;500;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 
 <style>
 /* =====================================================================
@@ -633,8 +634,144 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 }
 #ord-finance-due:focus { border-color: var(--accent-green); box-shadow: 0 0 0 3px rgba(76,175,80,0.18); }
 
+/* =====================================================================
+   BROWSER SEARCH MODULE
+   ===================================================================== */
+#module-browser { background: #f0f2f5; min-height: 100vh; flex-direction: column; }
+#nav-browser .nav-item.active { background: rgba(76,175,80,0.18); color: #fff; font-weight: 500; }
+
+/* Search result highlight pulse */
+@keyframes searchHighlight {
+  0%   { box-shadow: 0 0 0 0 rgba(76,175,80,0.6); }
+  50%  { box-shadow: 0 0 0 8px rgba(76,175,80,0); }
+  100% { box-shadow: 0 0 0 0 rgba(76,175,80,0); }
+}
+.search-result-highlight { animation: searchHighlight 1s ease 2; outline: 2px solid var(--accent-green) !important; }
+
+/* Spin animation */
+@keyframes spin360 { to { transform: rotate(360deg); } }
+
+/* Universal Search Bar */
+.usearch-wrap {
+  display: flex; align-items: center; gap: 0;
+  background: #fff; border: 2px solid #e0e0e0; border-radius: 28px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08); overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  max-width: 700px; width: 100%;
+}
+.usearch-wrap:focus-within { border-color: var(--accent-green); box-shadow: 0 2px 18px rgba(76,175,80,0.18); }
+.usearch-input {
+  flex: 1; padding: 14px 18px; font-size: 16px; font-family: 'Poppins', sans-serif;
+  border: none; outline: none; color: #111; background: transparent;
+}
+.usearch-input::placeholder { color: #9ca3af; }
+.usearch-engine-select {
+  border: none; border-left: 1.5px solid #e5e7eb; background: #f9f9f9;
+  padding: 12px 14px; font-size: 13px; font-family: 'Poppins', sans-serif;
+  color: #555; outline: none; cursor: pointer; min-width: 110px;
+}
+.usearch-btn {
+  padding: 12px 22px; background: var(--accent-green); color: #fff;
+  border: none; cursor: pointer; font-size: 15px; transition: background 0.2s;
+  display: flex; align-items: center; gap: 8px; font-family: 'Poppins', sans-serif; font-weight: 500;
+}
+.usearch-btn:hover { background: #388e3c; }
+
+/* Quick shortcuts */
+.browser-shortcuts { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px; }
+.browser-shortcut {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 12px 16px; background: #fff; border-radius: 12px;
+  border: 1.5px solid #e5e7eb; cursor: pointer; transition: all 0.2s;
+  min-width: 80px; text-align: center;
+}
+.browser-shortcut:hover { border-color: var(--accent-green); box-shadow: 0 4px 14px rgba(76,175,80,0.15); transform: translateY(-2px); }
+.browser-shortcut .sc-icon { font-size: 22px; }
+.browser-shortcut .sc-label { font-size: 11px; font-weight: 500; color: #555; }
+
+/* Search history chips */
+.search-history { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 14px; }
+.search-chip {
+  padding: 5px 14px; background: #fff; border: 1.5px solid #e5e7eb; border-radius: 20px;
+  font-size: 12px; cursor: pointer; color: #444; transition: all 0.18s;
+  display: flex; align-items: center; gap: 6px;
+}
+.search-chip:hover { border-color: var(--accent-green); color: var(--accent-green); }
+.search-chip .chip-del { color: #aaa; font-size: 14px; line-height: 1; }
+.search-chip .chip-del:hover { color: #ef4444; }
+
+/* Browser iframe area */
+.browser-iframe-area { flex: 1; position: relative; background: #f0f0f0; display: flex; flex-direction: column; }
+.browser-iframe-area iframe { flex: 1; width: 100%; border: none; display: block; height: calc(100vh - 180px); }
+
+/* Browser home screen */
+.browser-home {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 40px 20px; background: linear-gradient(160deg, #f8fffe 0%, #f0f7f0 100%);
+  text-align: center;
+}
+.browser-home-logo { font-size: 48px; margin-bottom: 10px; }
+.browser-home h2 { font-size: 24px; font-weight: 700; color: #1a2e1e; margin-bottom: 6px; }
+.browser-home p { font-size: 14px; color: #6b7280; margin-bottom: 28px; }
+
+/* Browser topbar */
+.browser-topbar {
+  display: flex; align-items: center; gap: 12px; padding: 10px 18px;
+  background: #fff; border-bottom: 1.5px solid #e5e7eb;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+}
+.browser-url-bar {
+  flex: 1; display: flex; align-items: center; gap: 8px;
+  background: #f3f4f6; border: 1.5px solid #e5e7eb; border-radius: 24px;
+  padding: 7px 16px; cursor: text;
+}
+.browser-url-bar input {
+  flex: 1; border: none; background: transparent; outline: none;
+  font-size: 13.5px; font-family: 'Poppins', sans-serif; color: #222;
+}
+.browser-url-bar .url-icon { color: #9ca3af; font-size: 12px; }
+.browser-nav-btn {
+  width: 34px; height: 34px; border-radius: 50%; border: none; background: none; cursor: pointer;
+  color: #555; font-size: 15px; display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.browser-nav-btn:hover { background: #f3f4f6; }
+.browser-nav-btn:disabled { opacity: 0.35; cursor: default; }
+.browser-loading-bar {
+  height: 3px; background: var(--accent-green);
+  position: absolute; top: 0; left: 0;
+  animation: loadingBarAnim 1.2s ease-in-out infinite;
+  display: none;
+}
+@keyframes loadingBarAnim {
+  0%   { width: 0%; left: 0; }
+  50%  { width: 60%; left: 20%; }
+  100% { width: 0%; left: 100%; }
+}
+
+/* Global search cross-page banner */
+#global-search-banner {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 8000;
+  background: linear-gradient(135deg, #1b4d2e, #0f2e18);
+  border-bottom: 2px solid var(--accent-green);
+  padding: 10px 20px; display: none; align-items: center; gap: 14px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+#global-search-banner.show { display: flex; }
+#global-search-banner p { color: #c8dece; font-size: 13px; flex: 1; }
+#global-search-banner strong { color: var(--accent-green); }
+#global-search-banner button {
+  padding: 6px 14px; border: 1px solid rgba(76,175,80,0.5); border-radius: 6px;
+  background: rgba(76,175,80,0.15); color: var(--accent-green); cursor: pointer;
+  font-size: 12px; font-weight: 600; font-family: 'Poppins', sans-serif; transition: all 0.2s;
+}
+#global-search-banner button:hover { background: var(--accent-green); color: #fff; }
+#global-search-banner .banner-close { color: rgba(255,255,255,0.4); background: none; border: none; font-size: 16px; padding: 4px 8px; cursor: pointer; }
+#global-search-banner .banner-close:hover { color: #fff; background: none; }
+
 /* Hamburger */
 .hamburger { display: none; background: none; border: none; cursor: pointer; color: var(--text-primary); font-size: 20px; padding: 6px; border-radius: var(--radius-sm); }
+
 
 /* =====================================================================
    FUNCTION BUILDER MODULE
@@ -819,9 +956,10 @@ textarea.form-control { resize: vertical; min-height: 80px; }
     </div>
 
     <!-- Module switcher -->
-    <div class="module-tabs">
+    <div class="module-tabs" style="flex-wrap:wrap;">
       <button class="module-tab active" id="tab-mgmt" onclick="switchModule('mgmt')">Management</button>
       <button class="module-tab" id="tab-finance" onclick="switchModule('finance')">Finance</button>
+      <button class="module-tab" id="tab-browser" onclick="switchModule('browser')" style="flex-basis:100%;border-radius:0 0 6px 6px;">🔍 Browser</button>
     </div>
 
     <!-- Management nav -->
@@ -856,6 +994,19 @@ textarea.form-control { resize: vertical; min-height: 80px; }
       <div class="sidebar-section-label">System</div>
       <button class="nav-item admin-only" data-fin-page="fin-users"><span class="nav-icon"><i class="fas fa-users-cog"></i></span> User Management</button>
       <button class="nav-item" data-fin-page="settings"><span class="nav-icon"><i class="fas fa-cog"></i></span> Settings</button>
+    </nav>
+
+    <!-- Browser Search nav -->
+    <nav class="sidebar-nav" id="nav-browser" style="display:none">
+      <div class="sidebar-section-label">Browser Search</div>
+      <button class="nav-item" data-browser-page="home"><span class="nav-icon"><i class="fas fa-home"></i></span> New Tab / Home</button>
+      <div class="sidebar-section-label">Quick Search</div>
+      <button class="nav-item" data-browser-search="youtube.com" data-browser-label="YouTube"><span class="nav-icon"><i class="fab fa-youtube" style="color:#ff0000"></i></span> YouTube</button>
+      <button class="nav-item" data-browser-search="google.com" data-browser-label="Google"><span class="nav-icon"><i class="fab fa-google" style="color:#4285f4"></i></span> Google</button>
+      <button class="nav-item" data-browser-search="reddit.com" data-browser-label="Reddit"><span class="nav-icon"><i class="fab fa-reddit" style="color:#ff4500"></i></span> Reddit</button>
+      <button class="nav-item" data-browser-search="wikipedia.org" data-browser-label="Wikipedia"><span class="nav-icon"><i class="fas fa-book" style="color:#888"></i></span> Wikipedia</button>
+      <button class="nav-item" data-browser-search="facebook.com" data-browser-label="Facebook"><span class="nav-icon"><i class="fab fa-facebook" style="color:#1877f2"></i></span> Facebook</button>
+      <button class="nav-item" data-browser-search="twitter.com" data-browser-label="X / Twitter"><span class="nav-icon"><i class="fab fa-twitter" style="color:#1da1f2"></i></span> X / Twitter</button>
     </nav>
 
     <!-- User info + logout -->
@@ -950,10 +1101,25 @@ textarea.form-control { resize: vertical; min-height: 80px; }
               </div>
             </div>
           </div>
+          <!-- Dashboard Charts Row -->
+          <div class="two-col" style="margin-bottom:20px;">
+            <div class="section-card">
+              <div class="section-header"><div><h2>&#x1F4B0; Income vs Expenses</h2><p>Investment &amp; Revenue vs Total Spending</p></div></div>
+              <div class="section-body" style="display:flex;align-items:center;justify-content:center;min-height:220px;">
+                <canvas id="dash-bar-chart" height="200"></canvas>
+              </div>
+            </div>
+            <div class="section-card">
+              <div class="section-header"><div><h2>&#x1F967; Expense Distribution</h2><p>Where money is being spent</p></div></div>
+              <div class="section-body" style="display:flex;align-items:center;justify-content:center;min-height:220px;">
+                <canvas id="dash-doughnut-chart" height="200"></canvas>
+              </div>
+            </div>
+          </div>
           <div class="two-col">
             <div class="section-card">
               <div class="section-header"><div><h2>Recent Transactions</h2><p>Latest activity across all categories</p></div></div>
-              <div class="section-body" style="padding-top:8px;padding-bottom:8px"><ul class="recent-list" id="recentList"><div class="empty-state"><div class="empty-icon">📊</div><p>No transactions yet.</p></div></ul></div>
+              <div class="section-body" style="padding-top:8px;padding-bottom:8px"><ul class="recent-list" id="recentList"><div class="empty-state"><div class="empty-icon">&#x1F4CA;</div><p>No transactions yet.</p></div></ul></div>
             </div>
             <div class="section-card">
               <div class="section-header"><div><h2>Spending Breakdown</h2><p>How expenses are distributed</p></div></div>
@@ -1179,9 +1345,25 @@ textarea.form-control { resize: vertical; min-height: 80px; }
             </div>
           </div>
 
+          <!-- Reports Charts -->
+          <div class="two-col" style="margin-bottom:20px;">
+            <div class="section-card">
+              <div class="section-header" style="background:#f8f8ff;"><div><h2 style="color:#3d4dd4;">&#x1F4CA; Financial Overview Chart</h2><p>Investment, Expenses &amp; Revenue at a glance</p></div></div>
+              <div class="section-body" style="display:flex;align-items:center;justify-content:center;min-height:240px;">
+                <canvas id="rep-bar-chart" height="220"></canvas>
+              </div>
+            </div>
+            <div class="section-card">
+              <div class="section-header" style="background:#f8f8ff;"><div><h2 style="color:#3d4dd4;">&#x1F967; Spending Breakdown</h2><p>Distribution of all outgoing costs</p></div></div>
+              <div class="section-body" style="display:flex;align-items:center;justify-content:center;min-height:240px;">
+                <canvas id="rep-pie-chart" height="220"></canvas>
+              </div>
+            </div>
+          </div>
+
           <!-- Section: Total Investment -->
           <div class="section-card">
-            <div class="section-header"><div><h2>🔹 Total Investment</h2><p><span id="rep-inv-count">0 records</span> &nbsp;·&nbsp; <strong id="rep-inv-total">BDT 0.00</strong></p></div></div>
+            <div class="section-header"><div><h2>&#x1F539; Total Investment</h2><p><span id="rep-inv-count">0 records</span> &nbsp;·&nbsp; <strong id="rep-inv-total">BDT 0.00</strong></p></div></div>
             <div class="section-body" style="padding:0">
               <div class="table-wrap"><table><thead><tr><th>Investor Name</th><th>Amount</th><th>Date</th><th>Method</th><th>Note</th></tr></thead>
               <tbody id="rep-inv-body"><tr><td colspan="5"><div class="empty-state"><div class="empty-icon">💼</div><p>No investments.</p></div></td></tr></tbody></table></div>
@@ -1905,6 +2087,119 @@ textarea.form-control { resize: vertical; min-height: 80px; }
       </div>
 
     </div><!-- end module-finance -->
+
+    <!-- ============================================================
+         MODULE: SOCIAL MEDIA
+         ============================================================ -->
+    <div class="module-view" id="module-browser">
+
+      <!-- Browser Topbar -->
+      <div class="browser-topbar">
+        <button class="hamburger" onclick="toggleSidebar()" style="color:#555;"><i class="fas fa-bars"></i></button>
+        <button class="browser-nav-btn" id="browser-back-btn" onclick="browserBack()" title="Back" disabled><i class="fas fa-arrow-left"></i></button>
+        <button class="browser-nav-btn" id="browser-fwd-btn" onclick="browserForward()" title="Forward" disabled><i class="fas fa-arrow-right"></i></button>
+        <button class="browser-nav-btn" id="browser-reload-btn" onclick="browserReload()" title="Reload"><i class="fas fa-redo-alt"></i></button>
+        <div class="browser-url-bar" onclick="focusBrowserSearch()">
+          <i class="fas fa-search url-icon" id="browser-url-icon"></i>
+          <input type="text" id="browser-url-input" placeholder="Search the web or type a URL..."
+            onkeydown="if(event.key==='Enter') browserNavigate(this.value)">
+          <button onclick="clearBrowserUrl()" title="Clear" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:14px;padding:0;" id="browser-clear-btn"><i class="fas fa-times"></i></button>
+        </div>
+        <select id="browser-engine-pick" style="padding:7px 10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:12px;font-family:'Poppins',sans-serif;background:#f9f9f9;cursor:pointer;outline:none;">
+          <option value="google">Google</option>
+          <option value="youtube">YouTube</option>
+          <option value="bing">Bing</option>
+          <option value="duckduckgo">DuckDuckGo</option>
+          <option value="wikipedia">Wikipedia</option>
+        </select>
+        <button class="browser-nav-btn" onclick="browserOpenTab()" title="Open in new tab" style="color:var(--accent-green);"><i class="fas fa-external-link-alt"></i></button>
+      </div>
+
+      <!-- Loading bar -->
+      <div style="position:relative;height:3px;background:#f0f0f0;">
+        <div id="browser-loading-bar" class="browser-loading-bar" style="height:3px;"></div>
+      </div>
+
+      <!-- Home screen (shown when no URL loaded) -->
+      <div class="browser-home" id="browser-home">
+        <div class="browser-home-logo">🔍</div>
+        <h2>Universal Search</h2>
+        <p>Search YouTube, Google, Reddit, Wikipedia, and the entire web — all from here.</p>
+
+        <!-- Big search bar -->
+        <div class="usearch-wrap">
+          <input type="text" class="usearch-input" id="browser-home-search"
+            placeholder="Search or enter a URL…"
+            onkeydown="if(event.key==='Enter') browserNavigate(this.value)">
+          <select class="usearch-engine-select" id="browser-home-engine">
+            <option value="google">🌐 Google</option>
+            <option value="youtube">▶ YouTube</option>
+            <option value="bing">🔷 Bing</option>
+            <option value="duckduckgo">🦆 DuckDuckGo</option>
+            <option value="wikipedia">📖 Wikipedia</option>
+          </select>
+          <button class="usearch-btn" onclick="browserNavigate(document.getElementById('browser-home-search').value)">
+            <i class="fas fa-search"></i> Search
+          </button>
+        </div>
+
+        <!-- Recent searches -->
+        <div id="browser-history-wrap" style="margin-top:14px;display:none;">
+          <div style="font-size:11px;font-weight:600;color:#9ca3af;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;">Recent Searches</div>
+          <div class="search-history" id="browser-history-chips"></div>
+        </div>
+
+        <!-- Quick shortcuts -->
+        <div class="browser-shortcuts" style="margin-top:28px;">
+          <div class="browser-shortcut" onclick="browserGo('https://www.google.com')">
+            <span class="sc-icon">🌐</span><span class="sc-label">Google</span>
+          </div>
+          <div class="browser-shortcut" onclick="browserGo('https://www.youtube.com')">
+            <span class="sc-icon">▶️</span><span class="sc-label">YouTube</span>
+          </div>
+          <div class="browser-shortcut" onclick="browserGo('https://www.reddit.com')">
+            <span class="sc-icon">🤖</span><span class="sc-label">Reddit</span>
+          </div>
+          <div class="browser-shortcut" onclick="browserGo('https://www.wikipedia.org')">
+            <span class="sc-icon">📖</span><span class="sc-label">Wikipedia</span>
+          </div>
+          <div class="browser-shortcut" onclick="browserGo('https://www.facebook.com')">
+            <span class="sc-icon">👤</span><span class="sc-label">Facebook</span>
+          </div>
+          <div class="browser-shortcut" onclick="browserGo('https://twitter.com')">
+            <span class="sc-icon">🐦</span><span class="sc-label">X / Twitter</span>
+          </div>
+          <div class="browser-shortcut" onclick="browserGo('https://www.instagram.com')">
+            <span class="sc-icon">📸</span><span class="sc-label">Instagram</span>
+          </div>
+          <div class="browser-shortcut" onclick="browserGo('https://www.github.com')">
+            <span class="sc-icon">💻</span><span class="sc-label">GitHub</span>
+          </div>
+        </div>
+
+        <p style="margin-top:28px;font-size:12px;color:#c0c0c0;"><i class="fas fa-info-circle"></i> Some sites block embedding — results open in a new tab automatically.</p>
+      </div>
+
+      <!-- Iframe area (shown after search) -->
+      <div class="browser-iframe-area" id="browser-iframe-area" style="display:none;">
+        <div id="browser-blocked-msg" style="display:none;flex-direction:column;align-items:center;justify-content:center;padding:60px 30px;text-align:center;background:#f9fafb;flex:1;gap:14px;">
+          <div style="font-size:48px;">🔒</div>
+          <h3 style="font-size:18px;font-weight:700;color:#111827;" id="browser-blocked-title">Site blocked embedding</h3>
+          <p style="font-size:14px;color:#6b7280;max-width:440px;line-height:1.6;" id="browser-blocked-desc">This website prevents being embedded for security reasons. Click below to open it directly in your browser.</p>
+          <button onclick="browserOpenTab()" style="padding:12px 28px;background:var(--accent-green);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;">
+            <i class="fas fa-external-link-alt"></i> Open in New Tab
+          </button>
+        </div>
+        <iframe id="browser-iframe"
+          style="width:100%;height:calc(100vh - 120px);border:none;display:none;"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
+          referrerpolicy="no-referrer-when-downgrade"
+          onload="onBrowserIframeLoad()"
+          onerror="onBrowserIframeError()">
+        </iframe>
+      </div>
+
+    </div><!-- end module-browser -->
 
   </div><!-- end main-content -->
 </div><!-- end app-shell -->
@@ -3189,39 +3484,12 @@ function exportToCSV(type) {
   showToast('Export successful!');
 }
 
-/* ── Global search ── */
+/* ── Global search ── (upgraded version defined below in cross-page search block) */
+// handleGlobalSearch is redefined after the CROSS-PAGE SEARCH MAPPING block.
+// This stub is kept only as a placeholder; the real implementation overrides it.
 function handleGlobalSearch(query) {
-  if (!query || !query.trim()) {
-    // Restore the previously active nav tab rather than always jumping to home
-    const activeBtn = document.querySelector('#nav-mgmt .nav-item.active');
-    const activeTab = activeBtn ? activeBtn.dataset.tab : 'home';
-    switchTab(activeTab || 'home');
-    return;
-  }
-  query = query.toLowerCase().trim();
-  const container = document.getElementById('mgmt-content');
-
-  const products  = Utils.getData('products').filter(p => p.name?.toLowerCase().includes(query) || p.sku?.toLowerCase().includes(query) || p.category?.toLowerCase().includes(query));
-  const orders    = Utils.getData('orders').filter(o => o.id?.toLowerCase().includes(query) || o.customerName?.toLowerCase().includes(query) || o.productName?.toLowerCase().includes(query));
-  const customers = Utils.getData('customers').filter(c => c.name?.toLowerCase().includes(query) || c.contact?.toLowerCase().includes(query));
-  const suppliers = Utils.getData('suppliers').filter(s => s.company?.toLowerCase().includes(query) || s.name?.toLowerCase().includes(query));
-  const users     = currentUser?.role === 'admin' ? Auth.getUsers().filter(u => u.name?.toLowerCase().includes(query) || u.username?.toLowerCase().includes(query) || u.email?.toLowerCase().includes(query)) : [];
-
-  const total = products.length + orders.length + customers.length + suppliers.length + users.length;
-  let html = `<div class="glass-panel" style="padding:22px;"><h3 style="color:var(--text-muted-dark);margin-bottom:16px;">Search: "<strong>${Utils.esc(query)}</strong>" — ${total} result${total !== 1 ? 's' : ''}</h3>`;
-
-  if (total === 0) {
-    html += `<div style="text-align:center;padding:40px;color:var(--text-muted-dark);"><i class="fas fa-search" style="font-size:2.5rem;opacity:0.3;margin-bottom:14px;display:block;"></i><p>No results found.</p></div>`;
-  } else {
-    if (products.length) html += renderSearchSection('Products', products, ['SKU','Name','Category','Price','Stock'], p => `<td>${p.sku}</td><td>${p.name}</td><td>${p.category}</td><td>BDT ${p.price}</td><td><span class="${parseInt(p.stock)<5?'status-badge alert-badge':'status-badge'}">${p.stock}</span></td><td><button class="action-btn edit-btn" onclick="openMgmtModal('product','${p.id}')"><i class="fas fa-edit"></i></button><button class="action-btn delete-btn" onclick="deleteItem('products','${p.id}')"><i class="fas fa-trash"></i></button></td>`);
-    if (orders.length) html += renderSearchSection('Orders', orders, ['Order ID','Customer','Details','Total','Finance Due','Status'], o => `<td>${o.id}</td><td>${o.customerName}</td><td>${o.productName} (x${o.qty})</td><td>BDT ${o.total}</td><td>${o.financeNameDue||'—'}</td><td><span class="status-badge">${o.status}</span></td><td><button class="action-btn edit-btn" onclick="openMgmtModal('order','${o.id}')"><i class="fas fa-edit"></i></button><button class="action-btn delete-btn" onclick="deleteItem('orders','${o.id}')"><i class="fas fa-trash"></i></button></td>`);
-    if (customers.length) html += renderSearchSection('Customers', customers, ['Name','Contact','Address'], c => `<td>${c.name}</td><td>${c.contact}</td><td>${c.address}</td><td><button class="action-btn edit-btn" onclick="openMgmtModal('customer','${c.id}')"><i class="fas fa-edit"></i></button><button class="action-btn delete-btn" onclick="deleteItem('customers','${c.id}')"><i class="fas fa-trash"></i></button></td>`);
-    if (suppliers.length) html += renderSearchSection('Suppliers', suppliers, ['Company','Contact','Phone'], s => `<td><strong>${s.company}</strong></td><td>${s.name}</td><td>${s.number}</td><td><button class="action-btn edit-btn" onclick="openMgmtModal('supplier','${s.id}')"><i class="fas fa-edit"></i></button><button class="action-btn delete-btn" onclick="deleteItem('suppliers','${s.id}')"><i class="fas fa-trash"></i></button></td>`);
-    if (users.length) html += renderSearchSection('Users', users, ['Name','Username','Email','Role'], u => `<td><strong>${Utils.esc(u.name)}</strong></td><td>@${Utils.esc(u.username)}</td><td>${Utils.esc(u.email||'—')}</td><td>${Utils.esc(u.role)}</td><td><button class="action-btn edit-btn" onclick="openMgmtModal('user','${u.id}')"><i class="fas fa-edit"></i></button></td>`);
-  }
-
-  html += `</div>`;
-  container.innerHTML = html;
+  // Will be overridden by the upgraded version in the deferred script block.
+  // This should never run in practice.
 }
 
 function renderSearchSection(label, data, cols, rowFn) {
@@ -3705,6 +3973,49 @@ const FinDashboard = {
         <div class="progress-label"><span>${b.l}</span><span>${Utils.formatCurrency(b.v)} (${(b.v/totalSpend*100).toFixed(1)}%)</span></div>
         <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(b.v/totalSpend*100,100)}%;background:${b.c}"></div></div>
       </div>`).join('');
+
+    // Dashboard Charts
+    if (typeof Chart !== 'undefined') {
+      // Bar chart — Income vs Expenses
+      const barCtx = document.getElementById('dash-bar-chart');
+      if (barCtx) {
+        if (barCtx._chartInstance) barCtx._chartInstance.destroy();
+        barCtx._chartInstance = new Chart(barCtx, {
+          type: 'bar',
+          data: {
+            labels: ['Investment', 'Order Revenue', 'Biz Expenses', 'Product Costs', 'Marketing'],
+            datasets: [{
+              label: 'Amount (BDT)',
+              data: [tI, tOR, tE, tP, tM],
+              backgroundColor: ['#22c55e','#5b6af5','#ef4444','#f59e0b','#06b6d4'],
+              borderRadius: 6,
+              borderSkipped: false,
+            }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: true,
+            plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' BDT ' + Number(ctx.raw).toLocaleString('en-US',{minimumFractionDigits:2}) } } },
+            scales: { y: { ticks: { callback: v => 'BDT ' + (v>=1000?(v/1000).toFixed(1)+'k':v) }, grid: { color: 'rgba(0,0,0,0.05)' } }, x: { grid: { display: false } } }
+          }
+        });
+      }
+      // Doughnut chart — Spending distribution
+      const dCtx = document.getElementById('dash-doughnut-chart');
+      if (dCtx) {
+        if (dCtx._chartInstance) dCtx._chartInstance.destroy();
+        dCtx._chartInstance = new Chart(dCtx, {
+          type: 'doughnut',
+          data: {
+            labels: ['Business Expenses', 'Product Costs', 'Marketing & Ads'],
+            datasets: [{ data: [tE, tP, tM], backgroundColor: ['#ef4444','#f59e0b','#06b6d4'], borderWidth: 2, borderColor: '#fff', hoverOffset: 6 }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: true, cutout: '65%',
+            plugins: { legend: { position: 'bottom', labels: { padding: 14, font: { size: 11 } } }, tooltip: { callbacks: { label: ctx => ' BDT ' + Number(ctx.raw).toLocaleString('en-US',{minimumFractionDigits:2}) } } }
+          }
+        });
+      }
+    }
   },
 
   /* --- Editable balance methods --- */
@@ -4246,6 +4557,49 @@ function renderReports() {
           <td class="td-muted" style="font-size:12px">${Utils.esc(r.note||'—')}</td>
         </tr>`;
       }).join('');
+
+  // Report page Charts
+  if (typeof Chart !== 'undefined') {
+    const totalExpenses = tE + tP + tM;
+    // Bar chart — full overview
+    const repBarCtx = document.getElementById('rep-bar-chart');
+    if (repBarCtx) {
+      if (repBarCtx._chartInstance) repBarCtx._chartInstance.destroy();
+      repBarCtx._chartInstance = new Chart(repBarCtx, {
+        type: 'bar',
+        data: {
+          labels: ['Total Investment', 'Order Revenue', 'Business Expenses', 'Product Costs', 'Marketing', 'Net Balance'],
+          datasets: [{
+            label: 'BDT Amount',
+            data: [tI, tOR, tE, tP, tM, BalanceEngine.getCurrent()],
+            backgroundColor: ['#22c55e','#5b6af5','#ef4444','#f59e0b','#06b6d4', BalanceEngine.getCurrent() >= 0 ? '#16a34a' : '#dc2626'],
+            borderRadius: 7, borderSkipped: false,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: true,
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' BDT ' + Number(ctx.raw).toLocaleString('en-US',{minimumFractionDigits:2}) } } },
+          scales: { y: { ticks: { callback: v => 'BDT ' + (v>=1000?(v/1000).toFixed(1)+'k':v) }, grid: { color: 'rgba(0,0,0,0.05)' } }, x: { grid: { display: false } } }
+        }
+      });
+    }
+    // Pie chart — spending distribution
+    const repPieCtx = document.getElementById('rep-pie-chart');
+    if (repPieCtx) {
+      if (repPieCtx._chartInstance) repPieCtx._chartInstance.destroy();
+      repPieCtx._chartInstance = new Chart(repPieCtx, {
+        type: 'pie',
+        data: {
+          labels: ['Business Expenses', 'Product Costs', 'Marketing & Ads'],
+          datasets: [{ data: [tE, tP, tM], backgroundColor: ['#ef4444','#f59e0b','#06b6d4'], borderWidth: 2, borderColor: '#fff', hoverOffset: 8 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: true,
+          plugins: { legend: { position: 'bottom', labels: { padding: 14, font: { size: 11 } } }, tooltip: { callbacks: { label: ctx => ' BDT ' + Number(ctx.raw).toLocaleString('en-US',{minimumFractionDigits:2}) + ' (' + (ctx.raw/(tE+tP+tM||1)*100).toFixed(1) + '%)' } } }
+        }
+      });
+    }
+  }
 }
 
 function clearSection(key, label) {
@@ -4800,6 +5154,75 @@ const Exporter = {
       return data.map(r => `<tr>${cols.map(c => `<td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;">${c.fn ? c.fn(r) : (r[c.key]||'—')}</td>`).join('')}</tr>`).join('');
     }
 
+    // ── Inline SVG chart helpers for PDF ──
+    function makeSVGBar(items, width, height) {
+      // items: [{label, value, color}]
+      const maxVal = Math.max(...items.map(i => Math.abs(i.value)), 1);
+      const bw = Math.floor((width - 60) / items.length) - 8;
+      const barAreaH = height - 50;
+      let svgBars = '', svgLabels = '', svgVals = '';
+      items.forEach((item, idx) => {
+        const x = 50 + idx * ((width - 60) / items.length) + 4;
+        const bh = Math.max(4, Math.round((Math.abs(item.value) / maxVal) * barAreaH));
+        const y = 10 + barAreaH - bh;
+        const shortK = v => v >= 1000000 ? (v/1000000).toFixed(1)+'M' : v >= 1000 ? (v/1000).toFixed(0)+'k' : v.toFixed(0);
+        svgBars  += `<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="4" fill="${item.color}" opacity="0.88"/>`;
+        svgVals  += `<text x="${x + bw/2}" y="${y - 4}" text-anchor="middle" font-size="8" fill="#374151" font-weight="600">${shortK(Math.abs(item.value))}</text>`;
+        const lbl = item.label.length > 9 ? item.label.slice(0,8)+'…' : item.label;
+        svgLabels+= `<text x="${x + bw/2}" y="${height - 8}" text-anchor="middle" font-size="8" fill="#6b7280">${lbl}</text>`;
+      });
+      // Y-axis ticks
+      let yTicks = '';
+      for (let i = 0; i <= 4; i++) {
+        const yPos = 10 + (barAreaH * (1 - i/4));
+        const val = (maxVal * i/4);
+        const shortK = v => v >= 1000 ? (v/1000).toFixed(0)+'k' : v.toFixed(0);
+        yTicks += `<line x1="48" y1="${yPos}" x2="${width}" y2="${yPos}" stroke="#e5e7eb" stroke-width="0.5"/>`;
+        yTicks += `<text x="44" y="${yPos+3}" text-anchor="end" font-size="7" fill="#9ca3af">${shortK(val)}</text>`;
+      }
+      return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg" style="font-family:Arial,sans-serif">${yTicks}${svgBars}${svgVals}${svgLabels}</svg>`;
+    }
+
+    function makeSVGDonut(items, size) {
+      const total = items.reduce((s,i) => s + Math.abs(i.value), 0) || 1;
+      const cx = size/2, cy = size/2 - 10, r = size/2 - 28, ri = r * 0.58;
+      let arcs = '', legends = '', angle = -Math.PI/2;
+      items.forEach((item, idx) => {
+        const frac = Math.abs(item.value) / total;
+        const a1 = angle, a2 = angle + frac * 2 * Math.PI;
+        const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+        const x2 = cx + r * Math.cos(a2), y2 = cy + r * Math.sin(a2);
+        const xi1 = cx + ri * Math.cos(a2), yi1 = cy + ri * Math.sin(a2);
+        const xi2 = cx + ri * Math.cos(a1), yi2 = cy + ri * Math.sin(a1);
+        const lg = frac > 0.5 ? 1 : 0;
+        arcs += `<path d="M${x1},${y1} A${r},${r} 0 ${lg},1 ${x2},${y2} L${xi1},${yi1} A${ri},${ri} 0 ${lg},0 ${xi2},${yi2} Z" fill="${item.color}" opacity="0.88"/>`;
+        const ly = size - 22 + idx * 12;
+        const pct = (frac*100).toFixed(1);
+        const shortK = v => v >= 1000 ? (v/1000).toFixed(0)+'k' : v.toFixed(0);
+        legends += `<rect x="4" y="${ly}" width="8" height="8" rx="2" fill="${item.color}"/><text x="16" y="${ly+7}" font-size="8" fill="#374151">${item.label}: ${shortK(Math.abs(item.value))} (${pct}%)</text>`;
+        angle = a2;
+      });
+      // center label
+      const balText = total >= 1000000 ? (total/1000000).toFixed(1)+'M' : total >= 1000 ? (total/1000).toFixed(0)+'k' : total.toFixed(0);
+      const centerLabel = `<text x="${cx}" y="${cy-4}" text-anchor="middle" font-size="9" fill="#6b7280">Total</text><text x="${cx}" y="${cy+8}" text-anchor="middle" font-size="11" font-weight="700" fill="#0f1117">${balText}</text>`;
+      return `<svg width="${size}" height="${size + items.length*12}" xmlns="http://www.w3.org/2000/svg" style="font-family:Arial,sans-serif">${arcs}${centerLabel}${legends}</svg>`;
+    }
+
+    const pdfBarChart = makeSVGBar([
+      { label:'Investment', value:tI,  color:'#22c55e' },
+      { label:'Order Rev.', value:tOR, color:'#5b6af5' },
+      { label:'Biz Exp.',   value:tE,  color:'#ef4444' },
+      { label:'Product',    value:tP,  color:'#f59e0b' },
+      { label:'Marketing',  value:tM,  color:'#06b6d4' },
+      { label:'Balance',    value:Math.max(0, finalBalance), color: finalBalance>=0?'#16a34a':'#dc2626' },
+    ], 420, 160);
+
+    const pdfDonutChart = makeSVGDonut([
+      { label:'Business Exp.', value:tE, color:'#ef4444' },
+      { label:'Product Costs', value:tP, color:'#f59e0b' },
+      { label:'Marketing',     value:tM, color:'#06b6d4' },
+    ], 200);
+
     const html = `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><title>V.A.V.H Studio — Financial Report</title>
 <style>
@@ -4850,6 +5273,18 @@ const Exporter = {
   <div><div class="lbl">Total Outgoing (Expenses)</div><div class="val">${fmt(tE+tP+tM)}</div></div>
   <div style="text-align:center"><div class="lbl">Order Revenue</div><div class="val">+${fmt(tOR)}</div></div>
   <div style="text-align:right"><div class="lbl">Final Current Balance${isManual?' (Manually Adjusted)':''}</div><div class="net-val">${fmt(finalBalance)}</div></div>
+</div>
+
+<div class="section-title">📊 Financial Charts</div>
+<div style="display:flex;gap:24px;align-items:flex-start;margin-bottom:18px;page-break-inside:avoid;">
+  <div style="flex:1;">
+    <div style="font-size:9px;font-weight:700;color:#6b7280;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Income vs Expenses Overview</div>
+    ${pdfBarChart}
+  </div>
+  <div style="width:220px;flex-shrink:0;">
+    <div style="font-size:9px;font-weight:700;color:#6b7280;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Spending Distribution</div>
+    ${pdfDonutChart}
+  </div>
 </div>
 
 <div class="section-title">🔹 Total Investment</div>
@@ -6049,13 +6484,436 @@ const FnBuilder = (() => {
 document.addEventListener('DOMContentLoaded', () => {
   // FnBuilder will be initialized via finNavigate('fn-builder') when nav item is clicked
 });
+</script>
 
+<!-- ===================================================================
+     GLOBAL SEARCH BANNER — cross-page result notification
+     =================================================================== -->
+<div id="global-search-banner">
+  <i class="fas fa-search" style="color:var(--accent-green);font-size:16px;flex-shrink:0;"></i>
+  <p id="global-search-banner-text">Found results on another page.</p>
+  <button id="global-search-banner-goto" onclick="globalSearchGoto()">Go to Results</button>
+  <button class="banner-close" onclick="dismissSearchBanner()" title="Dismiss">&times;</button>
+</div>
 
-// Finance forms
+<script>
 /* =====================================================================
-   EVENT LISTENERS — all DOM-dependent bindings deferred until ready
+   CROSS-PAGE SEARCH MAPPING
+   Maps searchable terms → { module, page, tab, label }
    ===================================================================== */
+const SEARCH_PAGE_MAP = [
+  /* Management pages */
+  { keywords: ['product','products','sku','stock','category','price','inventory management'],       module:'mgmt',    tab:'products',        label:'Product List' },
+  { keywords: ['order','orders','order id','pending','completed','order management'],               module:'mgmt',    tab:'orders',          label:'Orders' },
+  { keywords: ['customer','customers','client','contact','buyer'],                                  module:'mgmt',    tab:'customers',       label:'Customers' },
+  { keywords: ['supplier','suppliers','vendor','company','supply'],                                 module:'mgmt',    tab:'suppliers',       label:'Suppliers' },
+  { keywords: ['message','messages','chat','conversation'],                                         module:'mgmt',    tab:'chat',            label:'Messages' },
+  { keywords: ['system user','sys user','users','user management','admin','role'],                  module:'mgmt',    tab:'sys-users',       label:'System Users' },
+  /* Finance pages */
+  { keywords: ['dashboard','finance dashboard','overview','balance','summary'],                     module:'finance', finPage:'dashboard',   label:'Finance Dashboard' },
+  { keywords: ['investment','investor','capital','funding'],                                        module:'finance', finPage:'investments', label:'Investments' },
+  { keywords: ['revenue','order revenue','income','earning'],                                       module:'finance', finPage:'order-revenue', label:'Order Revenue' },
+  { keywords: ['due','due tracker','payment due','debt'],                                           module:'finance', finPage:'due-tracker', label:'Due Tracker' },
+  { keywords: ['expense','expenses','business expense','employee expense','spending'],              module:'finance', finPage:'expenses',    label:'Business Expenses' },
+  { keywords: ['product expense','product cost','material','production cost'],                      module:'finance', finPage:'products',    label:'Product Expenses' },
+  { keywords: ['marketing','ads','advertising','campaign','facebook ad','google ad'],               module:'finance', finPage:'marketing',   label:'Marketing & Ads' },
+  { keywords: ['inventory','stock level','warehouse','manufactured','unsold'],                      module:'finance', finPage:'inventory',   label:'Inventory' },
+  { keywords: ['dealer','dealer supplier','supplier record','transaction'],                         module:'finance', finPage:'dealer-supplier', label:'Dealer / Supplier' },
+  { keywords: ['function builder','formula','calculator','custom function','fn builder'],           module:'finance', finPage:'fn-builder',  label:'Function Builder' },
+  { keywords: ['finance message','finance chat'],                                                   module:'finance', finPage:'fin-messages',label:'Finance Messages' },
+  { keywords: ['report','export','csv','download data'],                                            module:'finance', finPage:'reports',     label:'Reports / Export' },
+  { keywords: ['settings','google sheets','sync','api token','integration'],                       module:'finance', finPage:'settings',    label:'Settings' },
+  /* Social Media pages */
+  { keywords: ['facebook','facebook ads','ads manager','fb ads','meta ads','facebook manager'],    module:'social',  socialPage:'facebook-ads', label:'Facebook Ads Manager' },
+  { keywords: ['whatsapp','whatsapp web','chat wa','wa web','whatsapp business'],                  module:'social',  socialPage:'whatsapp',    label:'WhatsApp Web' },
+  { keywords: ['social','social media','instagram','tiktok'],                                      module:'social',  socialPage:'facebook-ads', label:'Social Media' },
+];
 
+/* Pending cross-page navigation target */
+let _pendingSearchTarget = null;
+
+/* ── Upgraded global search ── */
+function handleGlobalSearch(query) {
+  if (!query || !query.trim()) {
+    const activeBtn = document.querySelector('#nav-mgmt .nav-item.active');
+    const activeTab = activeBtn ? activeBtn.dataset.tab : 'home';
+    switchTab(activeTab || 'home');
+    dismissSearchBanner();
+    return;
+  }
+  const q = query.toLowerCase().trim();
+  const container = document.getElementById('mgmt-content');
+
+  /* ── Search within Management data ── */
+  const products  = Utils.getData('products').filter(p => p.name?.toLowerCase().includes(q) || p.sku?.toLowerCase().includes(q) || p.category?.toLowerCase().includes(q));
+  const orders    = Utils.getData('orders').filter(o => o.id?.toLowerCase().includes(q) || o.customerName?.toLowerCase().includes(q) || o.productName?.toLowerCase().includes(q));
+  const customers = Utils.getData('customers').filter(c => c.name?.toLowerCase().includes(q) || c.contact?.toLowerCase().includes(q));
+  const suppliers = Utils.getData('suppliers').filter(s => s.company?.toLowerCase().includes(q) || s.name?.toLowerCase().includes(q));
+  const users     = currentUser?.role === 'admin' ? Auth.getUsers().filter(u => u.name?.toLowerCase().includes(q) || u.username?.toLowerCase().includes(q)) : [];
+
+  const mgmtTotal = products.length + orders.length + customers.length + suppliers.length + users.length;
+
+  /* ── Cross-page mapping lookup ── */
+  let crossPageMatch = null;
+  if (mgmtTotal === 0) {
+    // No results in Management — check if query maps to another page
+    for (const mapping of SEARCH_PAGE_MAP) {
+      if (mapping.keywords.some(kw => kw.includes(q) || q.includes(kw))) {
+        crossPageMatch = mapping;
+        break;
+      }
+    }
+  }
+
+  if (crossPageMatch) {
+    // Show cross-page banner and offer redirect
+    _pendingSearchTarget = crossPageMatch;
+    const bannerText = document.getElementById('global-search-banner-text');
+    bannerText.innerHTML = `No results in Management for "<strong>${Utils.esc(query)}</strong>". Found match in <strong>${crossPageMatch.label}</strong>.`;
+    document.getElementById('global-search-banner').classList.add('show');
+    // Show a "did you mean?" hint in the content area
+    container.innerHTML = `<div class="glass-panel" style="padding:28px;text-align:center;">
+      <i class="fas fa-search" style="font-size:2.5rem;opacity:0.3;margin-bottom:14px;display:block;color:var(--accent-green)"></i>
+      <h3 style="color:var(--text-muted-dark);margin-bottom:8px;">No results in Management</h3>
+      <p style="color:rgba(255,255,255,0.4);font-size:13px;margin-bottom:20px;">We found "<strong style="color:var(--accent-green)">${Utils.esc(query)}</strong>" in <strong style="color:#fff">${crossPageMatch.label}</strong></p>
+      <button class="btn-primary-mgmt" onclick="globalSearchGoto()" style="display:inline-flex;align-items:center;gap:8px;">
+        <i class="fas fa-arrow-right"></i> Go to ${crossPageMatch.label}
+      </button>
+    </div>`;
+    return;
+  }
+
+  // Clear banner if we have local results
+  dismissSearchBanner();
+
+  const total = mgmtTotal;
+  let html = `<div class="glass-panel" style="padding:22px;"><h3 style="color:var(--text-muted-dark);margin-bottom:16px;">Search: "<strong>${Utils.esc(query)}</strong>" — ${total} result${total !== 1 ? 's' : ''}</h3>`;
+
+  if (total === 0) {
+    html += `<div style="text-align:center;padding:40px;color:var(--text-muted-dark);"><i class="fas fa-search" style="font-size:2.5rem;opacity:0.3;margin-bottom:14px;display:block;"></i><p>No results found for "<strong>${Utils.esc(query)}</strong>" across any module.</p></div>`;
+  } else {
+    if (products.length)  html += renderSearchSection('Products',  products,  ['SKU','Name','Category','Price','Stock'],          p => `<td>${p.sku}</td><td>${p.name}</td><td>${p.category}</td><td>BDT ${p.price}</td><td><span class="${parseInt(p.stock)<5?'status-badge alert-badge':'status-badge'}">${p.stock}</span></td><td><button class="action-btn edit-btn" onclick="openMgmtModal('product','${p.id}')"><i class="fas fa-edit"></i></button><button class="action-btn delete-btn" onclick="deleteItem('products','${p.id}')"><i class="fas fa-trash"></i></button></td>`);
+    if (orders.length)    html += renderSearchSection('Orders',    orders,    ['Order ID','Customer','Details','Total','Status'], o => `<td>${o.id}</td><td>${o.customerName}</td><td>${o.productName} (x${o.qty})</td><td>BDT ${o.total}</td><td><span class="status-badge">${o.status}</span></td><td><button class="action-btn edit-btn" onclick="openMgmtModal('order','${o.id}')"><i class="fas fa-edit"></i></button><button class="action-btn delete-btn" onclick="deleteItem('orders','${o.id}')"><i class="fas fa-trash"></i></button></td>`);
+    if (customers.length) html += renderSearchSection('Customers', customers, ['Name','Contact','Address'],                       c => `<td>${c.name}</td><td>${c.contact}</td><td>${c.address}</td><td><button class="action-btn edit-btn" onclick="openMgmtModal('customer','${c.id}')"><i class="fas fa-edit"></i></button><button class="action-btn delete-btn" onclick="deleteItem('customers','${c.id}')"><i class="fas fa-trash"></i></button></td>`);
+    if (suppliers.length) html += renderSearchSection('Suppliers', suppliers, ['Company','Contact','Phone'],                      s => `<td><strong>${s.company}</strong></td><td>${s.name}</td><td>${s.number}</td><td><button class="action-btn edit-btn" onclick="openMgmtModal('supplier','${s.id}')"><i class="fas fa-edit"></i></button><button class="action-btn delete-btn" onclick="deleteItem('suppliers','${s.id}')"><i class="fas fa-trash"></i></button></td>`);
+    if (users.length)     html += renderSearchSection('Users',     users,     ['Name','Username','Role'],                         u => `<td><strong>${Utils.esc(u.name)}</strong></td><td>@${Utils.esc(u.username)}</td><td>${Utils.esc(u.role)}</td><td><button class="action-btn edit-btn" onclick="openMgmtModal('user','${u.id}')"><i class="fas fa-edit"></i></button></td>`);
+  }
+
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+/* Navigate to the cross-page match target */
+function globalSearchGoto() {
+  if (!_pendingSearchTarget) return;
+  const t = _pendingSearchTarget;
+  dismissSearchBanner();
+  if (t.module === 'mgmt') {
+    switchModule('mgmt');
+    requestAnimationFrame(() => { switchTab(t.tab); });
+  } else if (t.module === 'finance') {
+    switchModule('finance');
+    requestAnimationFrame(() => { finNavigate(t.finPage); });
+  } else if (t.module === 'browser') {
+    switchModule('browser');
+  }
+  _pendingSearchTarget = null;
+}
+
+function dismissSearchBanner() {
+  document.getElementById('global-search-banner').classList.remove('show');
+}
+
+/* =====================================================================
+   BROWSER SEARCH MODULE
+   ===================================================================== */
+let _browserCurrentUrl = '';
+let _browserHistory   = [];
+let _browserHistoryIdx = -1;
+let _browserIframeTimer = null;
+let _browserSearchHistory = JSON.parse(localStorage.getItem('vavh_search_history') || '[]');
+
+const SEARCH_ENGINES = {
+  google:     q => `https://www.google.com/search?q=${encodeURIComponent(q)}`,
+  youtube:    q => `https://www.youtube.com/results?search_query=${encodeURIComponent(q)}`,
+  bing:       q => `https://www.bing.com/search?q=${encodeURIComponent(q)}`,
+  duckduckgo: q => `https://duckduckgo.com/?q=${encodeURIComponent(q)}`,
+  wikipedia:  q => `https://en.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(q)}`,
+};
+
+/* Detect if input is a URL or a search query */
+function _isUrl(str) {
+  str = str.trim();
+  if (/^https?:\/\//i.test(str)) return true;
+  if (/^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\/|$)/.test(str)) return true;
+  return false;
+}
+
+function _buildUrl(query) {
+  query = query.trim();
+  if (!query) return '';
+  if (_isUrl(query)) {
+    return /^https?:\/\//i.test(query) ? query : 'https://' + query;
+  }
+  const engineKey = document.getElementById('browser-engine-pick')?.value
+    || document.getElementById('browser-home-engine')?.value
+    || 'google';
+  return SEARCH_ENGINES[engineKey]
+    ? SEARCH_ENGINES[engineKey](query)
+    : SEARCH_ENGINES.google(query);
+}
+
+function browserNavigate(query) {
+  if (!query || !query.trim()) return;
+  const url = _buildUrl(query);
+  _addToSearchHistory(query.trim());
+  browserGo(url);
+}
+
+function browserGo(url) {
+  if (!url) return;
+  _browserCurrentUrl = url;
+  /* Update URL bar */
+  const urlInput = document.getElementById('browser-url-input');
+  if (urlInput) urlInput.value = url;
+
+  /* Show iframe area, hide home */
+  document.getElementById('browser-home').style.display = 'none';
+  const area = document.getElementById('browser-iframe-area');
+  area.style.display = 'flex';
+  area.style.flexDirection = 'column';
+
+  /* Reset blocked/iframe states */
+  document.getElementById('browser-blocked-msg').style.display = 'none';
+  const iframe = document.getElementById('browser-iframe');
+  iframe.style.display = 'block';
+  iframe.src = '';
+
+  /* Loading bar */
+  const bar = document.getElementById('browser-loading-bar');
+  if (bar) bar.style.display = 'block';
+
+  /* Many sites block iframes — fall back to new tab for known blockers */
+  const ALWAYS_NEW_TAB = ['facebook.com/adsmanager','accounts.google.com','twitter.com','x.com','instagram.com','whatsapp.com'];
+  if (ALWAYS_NEW_TAB.some(d => url.includes(d))) {
+    window.open(url, '_blank', 'noopener,noreferrer');
+    browserShowHome();
+    return;
+  }
+
+  iframe.src = url;
+
+  /* Fallback: if blocked after 6s */
+  clearTimeout(_browserIframeTimer);
+  _browserIframeTimer = setTimeout(() => {
+    const l = document.getElementById('browser-iframe');
+    const b = document.getElementById('browser-blocked-msg');
+    if (l && b) {
+      l.style.display = 'none';
+      b.style.display = 'flex';
+      b.style.flexDirection = 'column';
+      document.getElementById('browser-blocked-title').textContent = 'Site blocked embedding';
+      document.getElementById('browser-blocked-desc').textContent = `"${_browserCurrentUrl}" prevents embedding. Click below to open it directly.`;
+    }
+    if (bar) bar.style.display = 'none';
+  }, 6000);
+
+  /* History */
+  if (_browserHistoryIdx < _browserHistory.length - 1) {
+    _browserHistory = _browserHistory.slice(0, _browserHistoryIdx + 1);
+  }
+  _browserHistory.push(url);
+  _browserHistoryIdx = _browserHistory.length - 1;
+  _updateNavBtns();
+
+  /* Sync engine select to url bar */
+  if (urlInput) urlInput.value = url;
+  document.getElementById('browser-clear-btn').style.display = 'block';
+}
+
+function onBrowserIframeLoad() {
+  clearTimeout(_browserIframeTimer);
+  const bar = document.getElementById('browser-loading-bar');
+  if (bar) bar.style.display = 'none';
+  try {
+    const iframe = document.getElementById('browser-iframe');
+    const doc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (doc && (!doc.body || doc.body.innerHTML.trim() === '')) {
+      onBrowserIframeError();
+    }
+  } catch(e) { /* cross-origin — probably fine */ }
+}
+
+function onBrowserIframeError() {
+  clearTimeout(_browserIframeTimer);
+  const bar = document.getElementById('browser-loading-bar');
+  if (bar) bar.style.display = 'none';
+  const iframe = document.getElementById('browser-iframe');
+  const blocked = document.getElementById('browser-blocked-msg');
+  if (iframe) iframe.style.display = 'none';
+  if (blocked) {
+    blocked.style.display = 'flex';
+    blocked.style.flexDirection = 'column';
+  }
+}
+
+function browserBack() {
+  if (_browserHistoryIdx > 0) {
+    _browserHistoryIdx--;
+    const url = _browserHistory[_browserHistoryIdx];
+    _browserCurrentUrl = url;
+    document.getElementById('browser-iframe').src = url;
+    document.getElementById('browser-url-input').value = url;
+    _updateNavBtns();
+  }
+}
+
+function browserForward() {
+  if (_browserHistoryIdx < _browserHistory.length - 1) {
+    _browserHistoryIdx++;
+    const url = _browserHistory[_browserHistoryIdx];
+    _browserCurrentUrl = url;
+    document.getElementById('browser-iframe').src = url;
+    document.getElementById('browser-url-input').value = url;
+    _updateNavBtns();
+  }
+}
+
+function browserReload() {
+  const iframe = document.getElementById('browser-iframe');
+  if (iframe && _browserCurrentUrl) {
+    iframe.src = _browserCurrentUrl;
+    const bar = document.getElementById('browser-loading-bar');
+    if (bar) bar.style.display = 'block';
+  }
+}
+
+function browserOpenTab() {
+  if (_browserCurrentUrl) {
+    window.open(_browserCurrentUrl, '_blank', 'noopener,noreferrer');
+  }
+}
+
+function browserShowHome() {
+  document.getElementById('browser-home').style.display = 'flex';
+  document.getElementById('browser-iframe-area').style.display = 'none';
+  document.getElementById('browser-url-input').value = '';
+  _browserCurrentUrl = '';
+  _renderSearchHistory();
+}
+
+function focusBrowserSearch() {
+  document.getElementById('browser-url-input').focus();
+}
+
+function clearBrowserUrl() {
+  document.getElementById('browser-url-input').value = '';
+  document.getElementById('browser-url-input').focus();
+}
+
+function _updateNavBtns() {
+  const back = document.getElementById('browser-back-btn');
+  const fwd  = document.getElementById('browser-fwd-btn');
+  if (back) back.disabled = _browserHistoryIdx <= 0;
+  if (fwd)  fwd.disabled  = _browserHistoryIdx >= _browserHistory.length - 1;
+}
+
+function _addToSearchHistory(query) {
+  _browserSearchHistory = [query, ..._browserSearchHistory.filter(q => q !== query)].slice(0, 10);
+  try { localStorage.setItem('vavh_search_history', JSON.stringify(_browserSearchHistory)); } catch(e){}
+  _renderSearchHistory();
+}
+
+function _removeFromHistory(query) {
+  _browserSearchHistory = _browserSearchHistory.filter(q => q !== query);
+  try { localStorage.setItem('vavh_search_history', JSON.stringify(_browserSearchHistory)); } catch(e){}
+  _renderSearchHistory();
+}
+
+function _renderSearchHistory() {
+  const wrap  = document.getElementById('browser-history-wrap');
+  const chips = document.getElementById('browser-history-chips');
+  if (!wrap || !chips) return;
+  if (!_browserSearchHistory.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  chips.innerHTML = _browserSearchHistory.map(q =>
+    `<div class="search-chip">
+      <span onclick="browserNavigate('${q.replace(/'/g,"&#39;")}')">${q}</span>
+      <span class="chip-del" onclick="_removeFromHistory('${q.replace(/'/g,"&#39;")}')">×</span>
+    </div>`
+  ).join('');
+}
+
+/* =====================================================================
+   PATCHED switchModule — adds 'browser' support
+   ===================================================================== */
+const _origSwitchModule = switchModule;
+window.switchModule = function(mod) {
+  currentModule = mod;
+
+  /* Update all three tabs */
+  document.getElementById('tab-mgmt').classList.toggle('active',    mod === 'mgmt');
+  document.getElementById('tab-finance').classList.toggle('active', mod === 'finance');
+  document.getElementById('tab-browser').classList.toggle('active', mod === 'browser');
+
+  /* Clear indicators from all navs */
+  setNavActive('#nav-mgmt',    null);
+  setNavActive('#nav-finance', null);
+  setNavActive('#nav-browser', null);
+
+  /* Show correct nav */
+  document.getElementById('nav-mgmt').style.display     = mod === 'mgmt'    ? '' : 'none';
+  document.getElementById('nav-finance').style.display  = mod === 'finance' ? '' : 'none';
+  document.getElementById('nav-browser').style.display  = mod === 'browser' ? '' : 'none';
+
+  /* Show correct module view */
+  document.getElementById('module-mgmt').classList.toggle('active',    mod === 'mgmt');
+  document.getElementById('module-finance').classList.toggle('active', mod === 'finance');
+  document.getElementById('module-browser').classList.toggle('active', mod === 'browser');
+
+  requestAnimationFrame(() => {
+    if (mod === 'mgmt') {
+      switchTab(currentMgmtTab || 'home');
+    } else if (mod === 'finance') {
+      finNavigate(currentFinPage || 'dashboard');
+    } else if (mod === 'browser') {
+      _renderSearchHistory();
+      document.getElementById('browser-home-search').focus();
+    }
+  });
+};
+
+/* Attach browser nav handlers on DOMContentLoaded */
+document.addEventListener('DOMContentLoaded', () => {
+  /* Home button */
+  document.querySelectorAll('#nav-browser .nav-item[data-browser-page]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      setNavActive('#nav-browser', null);
+      btn.classList.add('active');
+      browserShowHome();
+    });
+  });
+  /* Quick-search nav items */
+  document.querySelectorAll('#nav-browser .nav-item[data-browser-search]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const url  = 'https://www.' + btn.dataset.browserSearch;
+      setNavActive('#nav-browser', null);
+      btn.classList.add('active');
+      browserGo(url);
+    });
+  });
+
+  /* Sync engine selects */
+  const homeEngine = document.getElementById('browser-home-engine');
+  const topEngine  = document.getElementById('browser-engine-pick');
+  if (homeEngine && topEngine) {
+    homeEngine.addEventListener('change', () => { topEngine.value = homeEngine.value; });
+    topEngine.addEventListener('change',  () => { homeEngine.value = topEngine.value; });
+  }
+});
+</script>
+
+<script>
 // Finance table sort header helper
 function applySortHeaders(selector, module) {
   document.querySelectorAll(`th[data-sort="${selector}"]`).forEach(th => {
